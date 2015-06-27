@@ -6,6 +6,8 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"strings"
+	"path"
 )
 
 // Mark of daemon process - system environment variable _GO_DAEMON=1
@@ -180,10 +182,25 @@ func (d *Context) closeFiles() (err error) {
 }
 
 func (d *Context) prepareEnv() (err error) {
-	if d.abspath, err = filepath.Abs(os.Args[0]); err != nil {
-		return
-	}
+	pths := strings.Split(os.Getenv("PATH"), ":")
 
+	if abspath, err := filepath.Abs(os.Args[0]); err == nil {				
+		if _, err := os.Stat(abspath); err == nil {
+			d.abspath = abspath	
+			goto EnvEnd
+		}
+	}
+		
+	for _, pth := range pths {
+		abspath := path.Join(pth, os.Args[0])
+		if _, err := os.Stat(abspath); err == nil {
+			d.abspath = abspath	
+			goto EnvEnd
+		}
+	}
+	
+
+EnvEnd:
 	if len(d.Args) == 0 {
 		d.Args = os.Args
 	}
