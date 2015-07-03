@@ -185,9 +185,11 @@ func (d *Context) prepareEnv() (err error) {
 	pths := strings.Split(os.Getenv("PATH"), ":")
 
 	if abspath, err := filepath.Abs(os.Args[0]); err == nil {				
-		if _, err := os.Stat(abspath); err == nil {
-			d.abspath = abspath	
-			goto EnvEnd
+		if st, err := os.Stat(abspath); err == nil {
+			if !st.IsDir() {
+				d.abspath = abspath	
+				goto EnvEnd	
+			}			
 		}
 	}
 		
